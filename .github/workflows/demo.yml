@@ -18,6 +18,9 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      # vào trong step -> id của phần cần lấy(ở đây là publish) -> outputs -> tên file (ở đây là script-file)
+      script-file: ${{ steps.publish.outputs.script-file }}
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -25,6 +28,10 @@ jobs:
         run: npm ci
       - name: Build website
         run: npm run build
+      - name: Public JS filename
+        id: publish
+        # Lưu ý, scripe-file là tên mà người dùng tùy chọn, và sẽ được sử dụng trong phần script-file trong outputs
+        run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';'
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -46,5 +53,8 @@ jobs:
           name: dist files
       - name: Output contents
         run: ls
+      - name: Output filename
+          # Cần needs( ở đây là build) -> outputs -> tên file cần lấy
+        run: echo "${{ needs.build.outputs.script-file }}"
       - name: Deploy
         run: echo "Deploying..."
